@@ -5,8 +5,8 @@ The techniques behind the parser are described in the paper [Simple and Accurate
 
 #### Required software
 
- * Python 2.7 interpreter
- * [DyNet library](https://github.com/clab/dynet/tree/master/python)
+ * Python 3.6+ interpreter
+ * [DyNet library](https://github.com/clab/dynet/tree/master/python) (2.1)
 
 #### Train a parsing model
 
