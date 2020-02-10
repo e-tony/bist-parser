@@ -22,7 +22,7 @@ class ArcHybridLSTM:
         self.rdims = options.rembedding_dims
         self.layers = options.lstm_layers
         self.wordsCount = words
-        self.vocab = {word: ind+3 for word, ind in w2i.iteritems()}
+        self.vocab = {word: ind+3 for word, ind in w2i.items()}
         self.pos = {word: ind+3 for ind, word in enumerate(pos)}
         self.rels = {word: ind for ind, word in enumerate(rels)}
         self.irels = rels
@@ -41,16 +41,16 @@ class ArcHybridLSTM:
             self.external_embedding = {line.split(' ')[0] : [float(f) for f in line.strip().split(' ')[1:]] for line in external_embedding_fp}
             external_embedding_fp.close()
 
-            self.edim = len(self.external_embedding.values()[0])
-            self.noextrn = [0.0 for _ in xrange(self.edim)]
+            self.edim = len(list(self.external_embedding.values())[0])
+            self.noextrn = [0.0 for _ in range(self.edim)]
             self.extrnd = {word: i + 3 for i, word in enumerate(self.external_embedding)}
             self.elookup = self.model.add_lookup_parameters((len(self.external_embedding) + 3, self.edim))
-            for word, i in self.extrnd.iteritems():
+            for word, i in self.extrnd.items():
                 self.elookup.init_row(i, self.external_embedding[word])
             self.extrnd['*PAD*'] = 1
             self.extrnd['*INITIAL*'] = 2
 
-            print 'Load external embedding. Vector dimensions', self.edim
+            print('Load external embedding. Vector dimensions', self.edim)
 
         dims = self.wdims + self.pdims + (self.edim if self.external_embedding is not None else 0)
         self.blstmFlag = options.blstmFlag
@@ -104,8 +104,8 @@ class ArcHybridLSTM:
 
 
     def __evaluate(self, stack, buf, train):
-        topStack = [ stack.roots[-i-1].lstms if len(stack) > i else [self.empty] for i in xrange(self.k) ]
-        topBuffer = [ buf.roots[i].lstms if len(buf) > i else [self.empty] for i in xrange(1) ]
+        topStack = [ stack.roots[-i-1].lstms if len(stack) > i else [self.empty] for i in range(self.k) ]
+        topBuffer = [ buf.roots[i].lstms if len(buf) > i else [self.empty] for i in range(1) ]
 
         input = concatenate(list(chain(*(topStack + topBuffer))))
 
@@ -155,15 +155,16 @@ class ArcHybridLSTM:
 
 
     def Load(self, filename):
-        self.model.load(filename)
+        # self.model.load(filename)
+        self.model.populate(filename)
 
     def Init(self):
         evec = self.elookup[1] if self.external_embedding is not None else None
         paddingWordVec = self.wlookup[1]
         paddingPosVec = self.plookup[1] if self.pdims > 0 else None
 
-        paddingVec = tanh(self.word2lstm.expr() * concatenate(filter(None, [paddingWordVec, paddingPosVec, evec])) + self.word2lstmbias.expr() )
-        self.empty = paddingVec if self.nnvecs == 1 else concatenate([paddingVec for _ in xrange(self.nnvecs)])
+        paddingVec = tanh(self.word2lstm.expr() * concatenate(list(filter(None, [paddingWordVec, paddingPosVec, evec]))) + self.word2lstmbias.expr() )
+        self.empty = paddingVec if self.nnvecs == 1 else concatenate([paddingVec for _ in range(self.nnvecs)])
 
 
     def getWordEmbeddings(self, sentence, train):
@@ -184,7 +185,7 @@ class ArcHybridLSTM:
                     root.evec = self.elookup[0]
             else:
                 root.evec = None
-            root.ivec = concatenate(filter(None, [root.wordvec, root.posvec, root.evec]))
+            root.ivec = concatenate(list(filter(None, [root.wordvec, root.posvec, root.evec])))
 
         if self.blstmFlag:
             forward  = self.surfaceBuilders[0].initial_state()
@@ -229,7 +230,7 @@ class ArcHybridLSTM:
                 buf = ParseForest(conll_sentence)
 
                 for root in conll_sentence:
-                    root.lstms = [root.vec for _ in xrange(self.nnvecs)]
+                    root.lstms = [root.vec for _ in range(self.nnvecs)]
 
                 hoffset = 1 if self.headFlag else 0
 
@@ -297,7 +298,7 @@ class ArcHybridLSTM:
 
             for iSentence, sentence in enumerate(shuffledData):
                 if iSentence % 100 == 0 and iSentence != 0:
-                    print 'Processing sentence number:', iSentence, 'Loss:', eloss / etotal, 'Errors:', (float(eerrors)) / etotal, 'Labeled Errors:', (float(lerrors) / etotal) , 'Time', time.time()-start
+                    print('Processing sentence number:', iSentence, 'Loss:', eloss / etotal, 'Errors:', (float(eerrors)) / etotal, 'Labeled Errors:', (float(lerrors) / etotal) , 'Time', time.time()-start)
                     start = time.time()
                     eerrors = 0
                     eloss = 0.0
@@ -313,7 +314,7 @@ class ArcHybridLSTM:
                 buf = ParseForest(conll_sentence)
 
                 for root in conll_sentence:
-                    root.lstms = [root.vec for _ in xrange(self.nnvecs)]
+                    root.lstms = [root.vec for _ in range(self.nnvecs)]
 
                 hoffset = 1 if self.headFlag else 0
 
@@ -406,5 +407,5 @@ class ArcHybridLSTM:
 
             renew_cg()
 
-        self.trainer.update_epoch()
-        print "Loss: ", mloss/iSentence
+        self.trainer.update()  # learning rate might need to be updated here
+        print("Loss: ", mloss/iSentence)

@@ -55,8 +55,8 @@ def isProj(sentence):
     forest = ParseForest(sentence)
     unassigned = {entry.id: sum([1 for pentry in sentence if pentry.parent_id == entry.id]) for entry in sentence}
 
-    for _ in xrange(len(sentence)):
-        for i in xrange(len(forest.roots) - 1):
+    for _ in range(len(sentence)):
+        for i in range(len(forest.roots) - 1):
             if forest.roots[i].parent_id == forest.roots[i+1].id and unassigned[forest.roots[i].id] == 0:
                 unassigned[forest.roots[i+1].id]-=1
                 forest.Attach(i+1, i)
@@ -80,7 +80,7 @@ def vocab(conll_path):
             posCount.update([node.pos for node in sentence if isinstance(node, ConllEntry)])
             relCount.update([node.relation for node in sentence if isinstance(node, ConllEntry)])
 
-    return (wordsCount, {w: i for i, w in enumerate(wordsCount.keys())}, posCount.keys(), relCount.keys())
+    return (wordsCount, {w: i for i, w in enumerate(wordsCount.keys())}, posCount, relCount)
 
 
 def read_conll(fh, proj):
@@ -107,8 +107,8 @@ def read_conll(fh, proj):
     if len(tokens) > 1:
         yield tokens
 
-    print dropped, 'dropped non-projective sentences.'
-    print read, 'sentences read.'
+    print(dropped, 'dropped non-projective sentences.')
+    print(read, 'sentences read.')
 
 
 def write_conll(fn, conll_gen):
